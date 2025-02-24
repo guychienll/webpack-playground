@@ -1,10 +1,7 @@
-import * as Sentry from "@sentry/browser";
-import React from "react";
+import * as Sentry from '@sentry/browser';
+import React from 'react';
 
-class ErrorBoundary extends React.Component<
-  { children: React.ReactNode },
-  { hasError: boolean }
-> {
+class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean }> {
   constructor(props: { children: React.ReactNode }) {
     super(props);
     this.state = { hasError: false };
@@ -20,7 +17,7 @@ class ErrorBoundary extends React.Component<
     // 增加錯誤日誌記錄
     console.error('錯誤邊界捕獲到錯誤:', error);
     console.error('元件堆疊追蹤:', errorInfo.componentStack);
-    
+
     // 確保 Sentry 正確捕獲錯誤
     try {
       Sentry.withScope((scope) => {
@@ -31,7 +28,7 @@ class ErrorBoundary extends React.Component<
     } catch (sentryError) {
       console.error('Sentry 報告錯誤失敗:', sentryError);
     }
-    
+
     // 確保狀態被更新
     this.setState({ hasError: true });
   }
@@ -42,7 +39,7 @@ class ErrorBoundary extends React.Component<
         <div className="error-boundary p-4 text-center bg-red-50 rounded-lg">
           <h2 className="text-xl font-bold text-red-600 mb-2">系統發生錯誤</h2>
           <p className="text-gray-600 mb-4">很抱歉，程式發生了意外狀況</p>
-          <button 
+          <button
             onClick={() => window.location.reload()}
             className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
           >

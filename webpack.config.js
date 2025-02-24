@@ -1,17 +1,15 @@
-const { sentryWebpackPlugin } = require("@sentry/webpack-plugin");
-
-const path = require("path");
-const HtmlWebpackPlugin = require("html-webpack-plugin");
-const CopyPlugin = require("copy-webpack-plugin");
-const MiniCssExtractPlugin = require("mini-css-extract-plugin");
-const webpack = require("webpack");
+const { sentryWebpackPlugin } = require('@sentry/webpack-plugin');
+const path = require('path');
+const HtmlWebpackPlugin = require('html-webpack-plugin');
+const CopyPlugin = require('copy-webpack-plugin');
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 
 const commonConfig = {
-  entry: "./src/index.tsx",
+  entry: './src/index.tsx',
 
   output: {
-    filename: "bundle.js",
-    path: path.resolve(__dirname, "dist"),
+    filename: 'bundle.js',
+    path: path.resolve(__dirname, 'dist'),
     clean: true,
   },
 
@@ -22,13 +20,13 @@ const commonConfig = {
         exclude: /node_modules/,
         use: [
           {
-            loader: "babel-loader",
+            loader: 'babel-loader',
             options: {
-              presets: ["@babel/preset-env", "@babel/preset-react"],
+              presets: ['@babel/preset-env', '@babel/preset-react'],
             },
           },
           {
-            loader: "ts-loader",
+            loader: 'ts-loader',
           },
         ],
       },
@@ -36,36 +34,59 @@ const commonConfig = {
         test: /\.css$/,
         use: [
           MiniCssExtractPlugin.loader,
-          "css-loader",
+          'css-loader',
           {
-            loader: "postcss-loader",
+            loader: 'postcss-loader',
             options: {
               postcssOptions: {
-                plugins: ["@tailwindcss/postcss", ["postcss-preset-env", {}]],
+                plugins: ['@tailwindcss/postcss', ['postcss-preset-env', {}]],
               },
             },
           },
+          'thread-loader',
         ],
         exclude: /node_modules/,
       },
       {
         test: /\.svg$/i,
         issuer: /\.[jt]sx?$/,
-        use: ["@svgr/webpack"],
+        use: ['@svgr/webpack'],
       },
     ],
   },
 
   resolve: {
-    extensions: [".tsx", ".ts", ".jsx", ".js"],
+    extensions: ['.tsx', '.ts', '.jsx', '.js'],
     alias: {
-      "@": path.resolve(__dirname, "src"),
+      '@': path.resolve(__dirname, 'src'),
     },
   },
 
+  plugins: [
+    new HtmlWebpackPlugin({
+      template: './public/index.html',
+    }),
+    new MiniCssExtractPlugin({
+      filename: 'bundle.css',
+    }),
+    new CopyPlugin({
+      patterns: [
+        {
+          from: 'public/static/**/*',
+          globOptions: { ignore: ['**/index.html'], gitignore: true },
+        },
+      ],
+    }),
+  ],
+};
+
+const developmentConfig = {
+  ...commonConfig,
+  mode: 'development',
+  devtool: false,
   devServer: {
     static: {
-      directory: path.join(__dirname, "dist"),
+      directory: path.join(__dirname, 'dist'),
     },
     port: 3000,
     open: true,
@@ -73,43 +94,24 @@ const commonConfig = {
       overlay: false,
     },
   },
-
-  plugins: [
-    new HtmlWebpackPlugin({
-      template: "./public/index.html",
-    }),
-    new MiniCssExtractPlugin({
-      filename: "bundle.css",
-    }),
-    new CopyPlugin({
-      patterns: [
-        {
-          from: "public/static/**/*",
-          globOptions: { ignore: ["**/index.html"], gitignore: true },
-        },
-      ],
-    }),
-  ],
-  devtool: false,
 };
 
-const isDevelopment = process.env.NODE_ENV === "development";
-
-if (isDevelopment) {
-  console.log("isDevelopment");
-} else {
-  commonConfig.stats = "errors-only";
-  commonConfig.devtool = "hidden-source-map";
-  commonConfig.plugins.push(
+const productionConfig = {
+  ...commonConfig,
+  mode: 'production',
+  stats: 'errors-only',
+  devtool: 'hidden-source-map',
+  plugins: [
+    ...commonConfig.plugins,
     sentryWebpackPlugin({
       authToken: process.env.SENTRY_AUTH_TOKEN,
-      org: "guychienll",
-      project: "webpack-playground",
+      org: 'guychienll',
+      project: 'webpack-playground',
       options: {
         telemetry: false,
       },
     }),
-  );
-}
+  ],
+};
 
-module.exports = commonConfig;
+module.exports = process.env.NODE_ENV === 'development' ? developmentConfig : productionConfig;
